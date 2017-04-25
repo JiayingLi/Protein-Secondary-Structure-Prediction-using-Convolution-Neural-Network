@@ -124,7 +124,7 @@ def get_batch(data_in, data_out):
 def main():
     
     X_train, Y_train, protein_train, index_train = ReadData.load_pssm('train.pssm')
-    X_test, Y_test, protein_test, index_test = ReadData.load_pssm('validation.pssm')
+    X_test, Y_test, protein_test, index_test = ReadData.load_pssm('valid.pssm')
     model = Sequential()
     #model.add(Embedding())
     #model.add(ZeroPadding2D((1,1)))
