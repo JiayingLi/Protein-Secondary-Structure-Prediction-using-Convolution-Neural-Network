@@ -1,0 +1,13 @@
+embedding   cnn1    cnn2    cnn3    accuracy
+50          128 19  /       /       0.6845
+10          128 19  /       /       0.6901
+20          128 19  /       /       0.6798
+30          128 19  /       /       0.6910
+
+
+Two dense layers only with PSSM
+0.5554
+
+PSSM:
+A layer with 64 filters 3*3 size 2 dense layers
+Accuracy 0.7004 loss 0.7054 
