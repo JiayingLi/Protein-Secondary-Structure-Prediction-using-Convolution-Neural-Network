@@ -123,18 +123,18 @@ def get_batch(data_in, data_out):
     
 def main():
     
-    X_train, Y_train, protein_train, index_train = ReadData.load_pssm('train1000.pssm')
-    X_test, Y_test, protein_test, index_test = ReadData.load_pssm('testing100.pssm')
+    X_train, Y_train, protein_train, index_train = ReadData.load_pssm('train.pssm')
+    X_test, Y_test, protein_test, index_test = ReadData.load_pssm('validation.pssm')
     model = Sequential()
     #model.add(Embedding())
     #model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(64, 3, 3, border_mode='same', input_shape=(None,None,20) ,activation='relu'))
     model.add(Dropout(0.5))
     #model.add(MaxPooling2D())
-    model.add(Convolution2D(128, 3, 3, border_mode='same', input_shape=(None,None,20) ,activation='relu'))
+    model.add(Convolution2D(128, 3, 3, border_mode='same' ,activation='relu'))
     model.add(Dropout(0.5))
     #model.add(Flatten())
-    model.add(Convolution2D(256, 3, 3, border_mode='same', input_shape=(None,None,20) ,activation='relu'))
+    model.add(Convolution2D(256, 3, 3, border_mode='same' ,activation='relu'))
     model.add(Dropout(0.5))
     #model.add(Dense(32,input_shape=(20,),activation='relu'))
     #model.add(Dropout(0.5))
@@ -148,7 +148,7 @@ def main():
                 samples_per_epoch=index_train, 
                 validation_data=get_batch(X_test, Y_test),
                 nb_val_samples=index_test,
-                nb_epoch=3)
+                nb_epoch=10)
     
     
     #model.fit(X_train,Y_train,
