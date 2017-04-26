@@ -144,7 +144,7 @@ def main():
     model.add(Activation('sigmoid'))
 
     model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-    model.fit_generator(get_batch(X_train, Y_train), 
+    fit_result = model.fit_generator(get_batch(X_train, Y_train), 
                 samples_per_epoch=index_train, 
                 validation_data=get_batch(X_test, Y_test),
                 nb_val_samples=index_test,
@@ -156,11 +156,15 @@ def main():
     #            nb_epoch=10,
     #            validation_data=(X_test,Y_test),
     #            verbose=1)
+    sys.setrecursionlimit(10000)
+    pickle.dump(fit_results, open('CNN2D_fit_results.pkl', 'w'))                #save results
+    model.save_weights('CNN2D_model_weights.hdf5')                              #save model weights
+    json_string = model.to_json()                                               #save model to json file
+    open('CNN2D_architecture.json','w').write(json_string)
     
+    score = model.evaluate_generator(get_batch(X_test,Y_test),index_test)
     
-    #score = model.evaluate_generator(get_batch(X_test,Y_test),index_test)
-    
-    #print(score)
+    print(score)
 
 if __name__ == '__main__':
     main()
