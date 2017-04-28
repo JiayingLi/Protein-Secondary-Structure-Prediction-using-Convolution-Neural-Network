@@ -115,7 +115,7 @@ def get_batch(data_in, data_out):
             yield (input_data, output_data)
     
 def get_2Dmodel():
-    Sequential()
+    model = Sequential()
     #model.add(Embedding())
     #model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(64, 3, 3, border_mode='same', input_shape=(None,None,20) ,activation='relu'))
