@@ -11,10 +11,7 @@ from keras.layers import Embedding, ZeroPadding2D, Flatten
 from keras.layers import Convolution2D, GlobalMaxPooling2D, MaxPooling2D
 import pickle
 import sys
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/master
 batch_size = 20
 nb_filter = 250
 filter_length = 3
