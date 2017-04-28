@@ -44,9 +44,8 @@ class ReadData(object):
     # Encode an amino acid sequence
     
         return [1 if residue == amino_acid else 0
-            for amino_acid in ('A', 'R', 'N', 'D', 'C', 'E', 'Q', 'G', 'H',
-                               'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W',
-                               'Y', 'V')]
+            for amino_acid in ('A', 'R', 'N', 'D', 'C', 'E', 'Q', 'G', 'H', 'I', 
+                               'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V')]
         if x not in AAIndexes :
             return 0
         return AAIndexes[x]
@@ -54,7 +53,8 @@ class ReadData(object):
 
     @staticmethod
     def encode_dssp(dssp):
-        return [1 if dssp == hec else 0 for hec in ('H', 'E', 'C')]
+        return [1 if dssp == hec else 0 
+                for hec in ('H', 'E', 'C')]
         y = 0
         for hec in ('H', 'E', 'C'):
             if dssp == hec:
@@ -64,13 +64,6 @@ class ReadData(object):
             if y >= 2:
                 break;
         return y
-
-    @staticmethod
-    def shared_dataset(data_xy, borrow=True):
-        data_x, data_y, index = data_xy
-        shared_x = theano.shared(floatX(data_x), borrow=borrow)
-        shared_y = theano.shared(floatX(data_y), borrow=borrow)
-        return shared_x, shared_y, index
 
     @staticmethod
     def load(filename, window_size=19):
@@ -105,33 +98,36 @@ class ReadData(object):
         return X,Y,index
 
     @staticmethod
-    def load_pssm(filename, window_size=19, scale=piecewise_scaling_func):
+    def load_pssm(filename, scale=piecewise_scaling_func):
         print('... loading pssm ("%s")' % filename)
 
-        X = []
-        Y = []
-        index = [0]
+        index = 0
         with open(filename, 'r') as f:
             num_proteins = int(f.readline().strip())
-            for __ in range(num_proteins):
+            X = [None] * num_proteins
+            Y = [None] * num_proteins
+            index = 0 #[None] * num_proteins
+            for protein_num in range(num_proteins):
                 m = int(f.readline().strip())
-                sequences = []
-                for __ in range(m):
+                sequences = [None] * m
+                for line_num in range(m):
                     line = f.readline()
-                    sequences += [scale(float(line[i*3: i*3+3]))
-                                  for i in range(20)]
-
-                X += [
-                    sequences[start:start+window_size*20]
-                    for start in range(0, m*20, 20)
-                ]
-
+                    sequences[line_num]=[]
+                    for i in range(20):
+                        s = ''.join(line[i*3: i*3+3]).strip()
+                        sequences[line_num].append(scale(float(s)))
+                    
+                #double_end = ([0.]*20) * (window_size//2)
+                #sequences = double_end + sequences + double_end
+                X[protein_num] = sequences
+                
                 structure = f.readline().strip()
-                Y += [ReadData.encode_dssp(dssp) for dssp in structure]
+                Y[protein_num] = [ReadData.encode_dssp(dssp) for dssp in structure]
 
-                index.append(index[-1] + m)
-
-        #return ReadData.shared_dataset([X, Y, index])
+                index += m
+        #X[0] = np.array(X[0])
+        #print(X[0].shape)
+        return X, Y, num_proteins,index
     
 def get_batch(data_in, data_out):
     while True:
@@ -199,7 +195,6 @@ def get_model():
     #model.add(GlobalMaxPooling1D())                             
     model.add(Dropout(0.3)) 
    
-    
     model.add(Convolution1D(nb_filter=128,
                             filter_length=10,
                             border_mode='same',
