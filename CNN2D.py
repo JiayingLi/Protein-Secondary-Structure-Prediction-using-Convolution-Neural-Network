@@ -9,6 +9,8 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import Embedding, ZeroPadding2D, Flatten
 from keras.layers import Convolution2D, GlobalMaxPooling2D, MaxPooling2D
+import pickle
+import sys
 
 batch_size = 20
 nb_filter = 250
