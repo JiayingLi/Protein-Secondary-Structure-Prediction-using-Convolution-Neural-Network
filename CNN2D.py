@@ -159,10 +159,10 @@ def main():
     #            validation_data=(X_test,Y_test),
     #            verbose=1)
     sys.setrecursionlimit(10000)
-    pickle.dump(fit_results, open('CNN2D1Layer_fit_results.pkl', 'w'))                #save results
-    model.save_weights('CNN2D1Layer_model_weights.hdf5')                              #save model weights
+    pickle.dump(fit_results, open('CNN2D_fit_results.pkl', 'w'))                #save results
+    model.save_weights('CNN2D_model_weights.hdf5')                              #save model weights
     json_string = model.to_json()                                               #save model to json file
-    open('CNN2D1Layer_architecture.json','w').write(json_string)
+    open('CNN2D_architecture.json','w').write(json_string)
     
     score = model.evaluate_generator(get_batch(X_test,Y_test),index_test)
     
