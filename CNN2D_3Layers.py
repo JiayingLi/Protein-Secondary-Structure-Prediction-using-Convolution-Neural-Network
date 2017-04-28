@@ -9,16 +9,14 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import Embedding, ZeroPadding2D, Flatten
 from keras.layers import Convolution2D, GlobalMaxPooling2D, MaxPooling2D
-import sys
 import pickle
+import sys
+
 batch_size = 20
 nb_filter = 250
 filter_length = 3
 hidden_dims = 250
 nb_epoch = 2
-
-def floatX(X):
-    return np.asarray(X, dtype=theano.config.floatX)
 
 def piecewise_scaling_func(x):
     if x < -5:
@@ -34,51 +32,45 @@ class ReadData(object):
     @staticmethod
     def encode_residue(residue):
         return [1 if residue == amino_acid else 0
-                for amino_acid in ('A', 'R', 'N', 'D', 'C', 'E', 'Q', 'G', 'H',
-                                   'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W',
-                                   'Y', 'V')]
+                for amino_acid in ('A', 'R', 'N', 'D', 'C', 'E', 'Q', 'G', 'H', 'I', 
+                                   'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V')]
 
     @staticmethod
     def encode_dssp(dssp):
-        return [1 if dssp == hec else 0 for hec in ('H', 'E', 'C')]
-
-    @staticmethod
-    def shared_dataset(data_xy, borrow=True):
-        data_x, data_y, index = data_xy
-        shared_x = theano.shared(floatX(data_x), borrow=borrow)
-        shared_y = theano.shared(floatX(data_y), borrow=borrow)
-        return shared_x, shared_y, index
-
+        return [1 if dssp == hec else 0 
+                for hec in ('H', 'E', 'C')]
+    
     @staticmethod
     def load(filename, window_size=19):
         print('... loading data ("%s")' % filename)
-
-        X = []
-        Y = []
-        index = [0]
+        n=1
+        
+        index = 0
         with open(filename, 'r') as f:
             line = f.read().strip().split('\n')
             num_proteins = len(line) // 2
-
+            X = [None] * num_proteins
+            Y = [None] * num_proteins
             for line_num in range(num_proteins):
-                sequence = line[line_num*2]
-                structure = line[line_num*2 + 1]
-
-                double_end = [None] * (window_size // 2)
-                unary_sequence = []
-                for residue in double_end + list(sequence) + double_end:
-                    unary_sequence += ReadData.encode_residue(residue)
-
-                X += [
-                    unary_sequence[start: start+window_size*20]
-                    for start in range(0, len(sequence)*20, 20)
-                ]
-
-                Y += [ReadData.encode_dssp(dssp) for dssp in structure]
-
-                index.append(index[-1] + len(sequence))
-
-        return ReadData.shared_dataset([X, Y, index])
+                sequence = line[line_num*2]                                                     #Get the amino acid sequence on line line_num*2
+                structure = line[line_num*2 + 1]                                                #Get the corresponding secondary structure from line_num*2 +1
+                if len(sequence)!=len(structure):
+                    print(line_num*2)                                               #Check if there is a protein has different number of AA and structure
+                #if len(sequence)<maxlen:
+                #    for i in range(len(sequence),maxlen):
+                #        sequence += '0'
+                #        structure += '0'
+                
+                X[line_num] = [ReadData.encodeAA(residue) for residue in sequence]
+                #if line_num==1:
+                #    print(X[line_num])
+                Y[line_num] = np.array([ReadData.encode_dssp(dssp) for dssp in structure])
+                index += len(sequence)
+            #X = np.array(X)
+            #print (X.shape)
+            #open('X.txt','w').write(str(X))
+        
+        return X,Y,index
 
     @staticmethod
     def load_pssm(filename, scale=piecewise_scaling_func):
@@ -122,11 +114,8 @@ def get_batch(data_in, data_out):
             output_data = np.expand_dims(output_data, axis=0)
             yield (input_data, output_data)
     
-def main():
-    
-    X_train, Y_train, protein_train, index_train = ReadData.load_pssm('train1000.pssm')
-    X_test, Y_test, protein_test, index_test = ReadData.load_pssm('testing100.pssm')
-    model = Sequential()
+def get_2Dmodel():
+    Sequential()
     #model.add(Embedding())
     #model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(64, 3, 3, border_mode='same', input_shape=(None,None,20) ,activation='relu'))
@@ -143,6 +132,14 @@ def main():
     model.add(Dropout(0.5))
     model.add(Dense(3))
     model.add(Activation('sigmoid'))
+    return model
+    
+def main():
+    
+    X_train, Y_train, protein_train, index_train = ReadData.load_pssm('train.pssm')
+    X_test, Y_test, protein_test, index_test = ReadData.load_pssm('valid.pssm')
+    
+    model = get_2Dmodel()
 
     model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=1e-3, momentum=0.9), metrics=['accuracy'])
     fit_result = model.fit_generator(get_batch(X_train, Y_train), 
@@ -158,10 +155,10 @@ def main():
     #            validation_data=(X_test,Y_test),
     #            verbose=1)
     sys.setrecursionlimit(10000)
-    pickle.dump(fit_results, open('CNN2D3Layer_fit_results.pkl', 'w'))                #save results
-    model.save_weights('CNN2D3Layer_model_weights.hdf5')                              #save model weights
+    pickle.dump(fit_results, open('CNN2D3Layers_fit_results.pkl', 'w'))                #save results
+    model.save_weights('CNN2D3Layers_model_weights.hdf5')                              #save model weights
     json_string = model.to_json()                                               #save model to json file
-    open('CNN2D3Layer_architecture.json','w').write(json_string)
+    open('CNN2D3Layers_architecture.json','w').write(json_string)
     
     score = model.evaluate_generator(get_batch(X_test,Y_test),index_test)
     
