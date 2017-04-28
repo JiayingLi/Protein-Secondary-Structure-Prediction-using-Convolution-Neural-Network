@@ -9,8 +9,8 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import Embedding, ZeroPadding2D, Flatten
 from keras.layers import Convolution2D, GlobalMaxPooling2D, MaxPooling2D
-import pickle
 import sys
+import pickle
 batch_size = 20
 nb_filter = 250
 filter_length = 3
@@ -158,10 +158,10 @@ def main():
     #            validation_data=(X_test,Y_test),
     #            verbose=1)
     sys.setrecursionlimit(10000)
-    pickle.dump(fit_results, open('CNN2D1Layer_fit_results.pkl', 'w'))                #save results
-    model.save_weights('CNN2D1Layer_model_weights.hdf5')                              #save model weights
+    pickle.dump(fit_results, open('CNN2D3Layer_fit_results.pkl', 'w'))                #save results
+    model.save_weights('CNN2D3Layer_model_weights.hdf5')                              #save model weights
     json_string = model.to_json()                                               #save model to json file
-    open('CNN2D1Layer_architecture.json','w').write(json_string)
+    open('CNN2D3Layer_architecture.json','w').write(json_string)
     
     score = model.evaluate_generator(get_batch(X_test,Y_test),index_test)
     
