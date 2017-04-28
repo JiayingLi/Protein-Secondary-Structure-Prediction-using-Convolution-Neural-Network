@@ -94,8 +94,8 @@ class ReadData(object):
                 #        structure += '0'
                 
                 X[line_num] = [ReadData.encodeAA(residue) for residue in sequence]
-                #if line_num==1:
-                #    print(X[line_num])
+                if line_num==1:
+                    print(X[line_num])
                 Y[line_num] = np.array([ReadData.encode_dssp(dssp) for dssp in structure])
                 index += len(sequence)
             #X = np.array(X)
@@ -138,8 +138,8 @@ def get_batch(data_in, data_out):
         for i in range(len(data_in)):
             input_data = np.array([data_in[i]])
             output_data = np.array([data_out[i]])
-            #input_data = np.squeeze(input_data)
-            #output_data = np.squeeze(output_data)
+            input_data = np.squeeze(input_data)
+            output_data = np.squeeze(output_data)
             yield (input_data, output_data)
     
     lengths = list(set(map(len, data_in)))
@@ -184,24 +184,24 @@ def get_model():
     #model.add(ZeroPadding1D(padding))
     # we add a Convolution1D, which will learn nb_filter
     # word group filters of size filter_length:
-    model.add(Convolution1D(nb_filter=64,
-                                filter_length=20,
+    model.add(Convolution1D(nb_filter=32,
+                                filter_length=19,
                                 input_shape=(None,20),
                                 border_mode='same',
                                 activation='relu',
                                 subsample_length = 1))
-    model.add(Dropout(0.3)) 
+    
     model.add(Convolution1D(nb_filter=64,
-                                filter_length=20,
+                                filter_length=10,
                                 border_mode='same',
                                 activation='relu',
                                 subsample_length = 1))
     #model.add(GlobalMaxPooling1D())                             
-    model.add(Dropout(0.3)) 
+    #model.add(Dropout(0.5)) 
    
     
     model.add(Convolution1D(nb_filter=128,
-                            filter_length=10,
+                            filter_length=5,
                             border_mode='same',
                             activation='relu'))
     
@@ -210,26 +210,26 @@ def get_model():
     #                        border_mode='same',
     #                        activation='relu'))
     
-    #model.add(GlobalMaxPooling1D())
+    model.add(GlobalMaxPooling1D())
     model.add(Dropout(0.5))
     
-    model.add(Dense(128))
+    model.add(Dense(256))
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
     
     model.add(Dense(3))
-    model.add(Activation('softmax'))
+    model.add(Activation('sigmoid'))
     return model
 def main():
     
-    X_train, Y_train, num_proteins = ReadData.load('training.data')
-    X_valid, Y_valid, num_validproteins = ReadData.load('validation.data')
+    X_train, Y_train, num_proteins = ReadData.load('train.data')
+    X_valid, Y_valid, num_validproteins = ReadData.load('test.data')
     X_eval, Y_eval, num_evalproteins = ReadData.load('casp9.data')
     
     model = get_model()
-    model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     #Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-    model.summary()
+    #model.summary()
     #nb_samples = X_train[0].shape
     
     #test_size = int(0.1 * num_proteins)
@@ -241,7 +241,7 @@ def main():
                         samples_per_epoch=num_proteins,
                         validation_data=get_batch(X_valid, Y_valid),
                         nb_val_samples=num_validproteins,
-                        nb_epoch=5)
+                        nb_epoch=10)
         
     eval = model.evaluate_generator(get_batch(X_eval,Y_eval),
                                     num_evalproteins)
