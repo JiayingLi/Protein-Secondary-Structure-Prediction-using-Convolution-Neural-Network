@@ -142,7 +142,7 @@ def main():
     model = get_2Dmodel()
 
     model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=1e-3, momentum=0.9), metrics=['accuracy'])
-    fit_result = model.fit_generator(get_batch(X_train, Y_train), 
+    fit_results = model.fit_generator(get_batch(X_train, Y_train), 
                 samples_per_epoch=index_train, 
                 validation_data=get_batch(X_test, Y_test),
                 nb_val_samples=index_test,
